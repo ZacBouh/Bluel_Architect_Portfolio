@@ -20,7 +20,9 @@ export default defineConfig({
                 main: resolve(__dirname, 'index.html'),
                 login: resolve(__dirname, 'assets/login.html'),
                 header: resolve(__dirname, 'assets/header.html'),
-                footer: resolve(__dirname, 'assets/footer.html')
+                footer: resolve(__dirname, 'assets/footer.html'),
+                modalEdit: resolve(__dirname, 'assets/modal-edit.html'),
+
             }
         }
     },
