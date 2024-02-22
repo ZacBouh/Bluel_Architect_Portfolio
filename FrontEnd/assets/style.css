@@ -135,6 +135,11 @@ table {
 }
 
 /** end reset css**/
+
+.notVisible {
+	visibility: hidden;
+}
+
 body {
 	max-width: 1140px;
 	margin: auto;
@@ -295,9 +300,10 @@ a:visited {
 
 input[type="submit"],
 .filterButton,
-.filterButton.clickedButton,
 #add-picture-button,
-button[type='submit'] {
+.filterButton.clickedButton,
+button[type='submit'],
+.button {
 	font-family: 'Syne';
 	font-weight: 700;
 	color: white;
@@ -491,6 +497,11 @@ button[type='submit'] {
 	margin: auto;
 }
 
+#add-picture-button.disactivated {
+	background-color: #A7A7A7;
+	border: #A7A7A7;
+}
+
 #add-work-file {
 	position: absolute;
 	width: 0.1px;
@@ -503,11 +514,18 @@ label[for='add-work-file'] {
 	background-color: #E8F1F6;
 	width: 420px;
 	height: fit-content;
+	max-height: 169px;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	border-radius: 3px;
+}
+
+label[for='add-work-file'] i,
+label[for='add-work-file'] p,
+label[for='add-work-file'] div {
+	pointer-events: none;
 }
 
 label[for='add-work-file'] i {
@@ -528,6 +546,11 @@ label[for='add-work-file'] div {
 	border-radius: 50px;
 	margin-bottom: 7px;
 	margin-top: 6px;
+}
+
+#file-img-preview {
+	position: absolute;
+	max-height: 169px;
 }
 
 .form select {

@@ -1,7 +1,6 @@
 import { apiUrl, importHTMLasString, Work, Category, isCategory, insertDiv, user, displayWorks, modalEditUrl, checkUserLogin, deleteHandler, modalAddWorkUrl } from "./assets/helpers"
 
 
-export { }
 
 
 
@@ -11,8 +10,6 @@ interface DataSet {
     'works'?: Work[]
     "categories"?: Category[]
 }
-
-
 
 // GENERAL
 
@@ -124,14 +121,12 @@ displayWorks(displayedWorks)
 
 //MODIFIER LES PROJETS
 
-//ajouter le bouton modifier et remplacer login par logout
-
-
-const startEditing = async function (event: Event) {
+const startEditingHandler = async function (event: Event) {
     () => console.log('start editing')
 
-    event.target?.removeEventListener('click', startEditing)
+    event.target?.removeEventListener('click', startEditingHandler)
 
+    //Ouverture de la modale modifier
     const body = document.querySelector('body')
     const modalContainer = body ? insertDiv(body, 'beforebegin', 'modalContainer') : undefined
     const modal = modalContainer ? insertDiv(modalContainer, 'afterbegin', 'modal') : undefined
@@ -141,32 +136,6 @@ const startEditing = async function (event: Event) {
     const modalGallery = document.getElementById('edit-gallery')
     displayWorks(worksSet, modalGallery, false, true)
 
-    function closeEditHandler(event: Event) {
-        const eventTarget = event.target as HTMLButtonElement
-        eventTarget.removeEventListener('click', closeEditHandler)
-        document.getElementById('editButton')?.addEventListener('click', startEditing)
-
-        modalContainer?.remove()
-    }
-
-    async function addWorkHandler(event: Event) {
-        const targetButton = event.target
-        targetButton?.removeEventListener('click', addWorkHandler)
-        const modalContent = document.getElementById('modal-content')
-        if (modalContent) modalContent.innerHTML = ''
-        const addWorkModalHtmlContent = await importHTMLasString(modalAddWorkUrl)
-        modalContent?.insertAdjacentHTML('afterbegin', addWorkModalHtmlContent)
-        document.querySelector('label[for="add-work-file"]')?.addEventListener('click', selectFileHandler)
-
-    }
-
-    function selectFileHandler(event: Event) {
-        console.log((event.target as HTMLLabelElement).getAttribute('for'))
-    }
-
-    const closeEditButton = document.getElementById('edit-close-button')
-    closeEditButton?.addEventListener('click', closeEditHandler)
-
     const figcaptions = document.querySelectorAll('#edit-gallery figcaption, #edit-gallery figcaption i')
     for (const figcaption of figcaptions) {
         figcaption.addEventListener('click', deleteHandler)
@@ -174,11 +143,113 @@ const startEditing = async function (event: Event) {
 
     document.getElementById('add-picture-button')?.addEventListener('click', addWorkHandler)
 
+    //Navigation de la modale
+    function closeEditHandler(event: Event) {
+        const eventTarget = event.target as HTMLButtonElement
+        eventTarget.removeEventListener('click', closeEditHandler)
+        document.getElementById('editButton')?.addEventListener('click', startEditingHandler)
+
+        modalContainer?.remove()
+    }
+    const closeEditButton = document.getElementById('edit-close-button')
+    closeEditButton?.addEventListener('click', closeEditHandler)
+
+    //Ajouter une photo
+    async function addWorkHandler(event: Event) {
+        const targetButton = event.target as HTMLButtonElement
+        targetButton?.removeEventListener('click', addWorkHandler)
+
+        //Change le contenu de la modale
+        const modalContent = document.getElementById('modal-content')
+        modalContent && (modalContent.innerHTML = '')
+        const addWorkModalHtmlContent = await importHTMLasString(modalAddWorkUrl)
+        modalContent?.insertAdjacentHTML('afterbegin', addWorkModalHtmlContent)
+
+        // Validation du formulaire
+        function addWorkFormValidate() {
+            const form = document.getElementById('add-work-form') as HTMLFormElement
+            const formIsValid = form.checkValidity()
+            const validateButton = document.getElementById('add-picture-button')
+            formIsValid && validateButton?.classList.remove('disactivated')
+            if (!formIsValid && !validateButton?.classList.toString().match('disactivated')) {
+                console.log('form is valid : ', formIsValid)
+                validateButton?.classList.add('disactivated')
+            }
+        }
+
+        const requiredInputs = document.querySelectorAll('input[required], select[required]')
+        console.log(requiredInputs)
+        for (const input of requiredInputs) {
+            if (input.getAttribute('type') === 'text') {
+                input?.addEventListener('input', addWorkFormValidate)
+            } else {
+                input?.addEventListener('change', addWorkFormValidate)
+            }
+        }
+
+        //Ajouter les catégories au dropdown du formulaire
+        const selectCategoryInput = document.getElementById('add-work-category') as HTMLInputElement
+
+        if (dataSet.categories) {
+            for (const category of dataSet.categories) {
+                selectCategoryInput.insertAdjacentHTML('beforeend', `<option value= "${category.id}">${category.name}</option>`)
+            }
+        }
+
+        //Envoyer la nouvelle photo
+        async function submitWorkHandler(event: Event) {
+            event.preventDefault()
+            const form = document.getElementById('add-work-form') as HTMLFormElement
+            const postData = new FormData(form)
+            const response = await fetch(apiUrl + 'works', {
+                method: 'POST',
+                body: postData,
+                headers: {
+                    'Authorization': `Bearer ${user.token}`,
+                }
+            })
+
+            const responseLog: Record<number, string> = {
+                201: 'work created',
+                400: 'Bad request',
+                401: 'unauthorized',
+                500: 'unexpected error'
+            }
+            console.log(Object.keys(responseLog).includes(response.status.toString()) ? responseLog[response.status] : 'unexpected server response')
+        }
+        const submitWorkButton = document.getElementById('add-picture-button')
+        console.dir('submit work button:', submitWorkButton)
+        submitWorkButton?.addEventListener('click', submitWorkHandler)
+
+        // Selectionner et Afficher la photo à ajouter
+        function selectFileHandler(event: Event) {
+            const fileInputLabel = event.target as HTMLLabelElement
+            const fileInputId = fileInputLabel.getAttribute('for')
+            const fileInput = fileInputId ? document.getElementById(fileInputId) as HTMLInputElement : undefined
+            fileInput && (fileInput.value = '')
+
+            function displayFilePicture(event: Event) {
+                const target = (event.target as HTMLInputElement)
+                const fileUrl = target.files && URL.createObjectURL(target.files[0])
+                console.log(fileUrl, typeof fileUrl)
+                document.getElementById('file-img-preview')?.remove()
+                fileInputLabel?.insertAdjacentHTML('afterbegin', `<img src="${fileUrl}" id="file-img-preview" />`)
+                const ajouterButton = document.querySelector('#add-work-file-label div')
+                ajouterButton?.classList.add('notVisible')
+            }
+
+            fileInput?.addEventListener('change', displayFilePicture)
+        }
+
+        document.querySelector('label[for="add-work-file"]')?.addEventListener('click', selectFileHandler)
+    }
+
+
     return modalContainer
 }
 
 
-//Ajout du bouton modifier si l'utilisateur est connecté
+//Afficher le bouton modifier et remplacer login par logout
 
 if (user.loggedIn) {
 
@@ -189,8 +260,6 @@ if (user.loggedIn) {
     portfolioTitle?.insertAdjacentHTML('beforeend', buttonHtml)
     const editButton = document.getElementById('editButton')
 
-    editButton?.addEventListener('click', startEditing)
+    editButton?.addEventListener('click', startEditingHandler)
 
 }
-
-
