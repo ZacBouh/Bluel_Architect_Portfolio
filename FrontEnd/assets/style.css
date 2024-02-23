@@ -406,7 +406,7 @@ button[type='submit'],
 	width: 630px;
 	max-height: 100%;
 	background-color: #FFFFFF;
-	padding: 26px 0px 45px 0px;
+	padding: 26px 0px 55px 0px;
 	border-radius: 10px;
 }
 
@@ -418,10 +418,12 @@ button[type='submit'],
 #edit-nav {
 	display: flex;
 	padding: 0 30px;
+	font-size: 20px;
 }
 
-#edit-nav i {
-	font-size: 20px;
+
+
+#edit-close-button {
 	width: fit-content;
 	display: block;
 	margin-left: auto;
@@ -441,9 +443,20 @@ button[type='submit'],
 	flex-wrap: wrap;
 	gap: 9px;
 	margin: 46px 105px;
-	border-bottom: 1px solid black;
 	margin-bottom: 38px;
+
+}
+
+#edit-gallery {
 	padding-bottom: 67px;
+	border-bottom: 1px solid black;
+}
+
+#add-work-form {
+	height: fit-content;
+	gap: 0px;
+	margin-bottom: 0px;
+	margin-top: 36px;
 }
 
 #edit-gallery figure {
@@ -493,8 +506,8 @@ button[type='submit'],
 	align-items: center;
 	flex: 0 1 auto;
 	height: 36px;
-	margin: 0;
 	margin: auto;
+	margin-top: 32px;
 }
 
 #add-picture-button.disactivated {
@@ -520,6 +533,7 @@ label[for='add-work-file'] {
 	justify-content: center;
 	align-items: center;
 	border-radius: 3px;
+	margin: 0px;
 }
 
 label[for='add-work-file'] i,
@@ -561,6 +575,12 @@ label[for='add-work-file'] div {
 
 .form .select-container {
 	position: relative;
+
+}
+
+.select-container {
+	border-bottom: 1px solid black;
+	padding-bottom: 47px;
 }
 
 .form .select-container::after {
@@ -579,6 +599,14 @@ label[for='add-work-file'] div {
 
 .form .select option {
 	width: 500px;
+}
+
+#add-work-form label {
+	margin-bottom: 10px;
+}
+
+label[for="add-work-category"] {
+	margin-top: 21px;
 }
 
 /* FOOTER */

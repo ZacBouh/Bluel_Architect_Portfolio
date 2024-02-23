@@ -1,4 +1,4 @@
-import { apiUrl, importHTMLasString, Work, Category, isCategory, insertDiv, user, displayWorks, modalEditUrl, checkUserLogin, deleteHandler, modalAddWorkUrl } from "./assets/helpers"
+import { apiUrl, importHTMLasString, Work, Category, isCategory, insertDiv, user, displayWorks, modalEditUrl, checkUserLogin, deleteHandler, modalAddWorkUrl, workEdited, setWorkEdited, displayMessage } from "./assets/helpers"
 
 
 
@@ -32,6 +32,7 @@ async function getData(apiUrl: string, dataType: string): Promise<Category[] | W
 }
 
 const getDataSet = async function (dataTypes: Array<'works' | 'categories'>): Promise<DataSet> {
+    console.log('fetching fresh data ...')
     const dataSet: DataSet = {}
     for (const dataType of dataTypes) {
         const data = await getData(apiUrl, dataType)
@@ -41,13 +42,13 @@ const getDataSet = async function (dataTypes: Array<'works' | 'categories'>): Pr
             dataSet.works = data
         }
     }
+    console.log('received fresh data : ', dataSet)
     return dataSet
 }
 
 const dataSet = await getDataSet(['categories', 'works'])
 
 const categoriesSet = dataSet.categories?.map((category) => category.name)
-const worksSet = dataSet.works
 
 console.log('Set of categories : ' + categoriesSet)
 
@@ -57,7 +58,11 @@ let displayedWorks = dataSet.works
 
 const filterProjects = function (projectType: string, data: Array<Work>) {
     const works = Array.from(data)
-    const filteredWorks = works.filter((work) => work.category.name === projectType)
+    const filteredWorks = works.filter((work) => {
+
+        return projectType === 'tous' ? true : work.category.name === projectType
+    })
+    console.log('filter result : ', filteredWorks)
     return filteredWorks
 }
 
@@ -78,7 +83,7 @@ const filterHandler = function (event: Event) {
             displayedWorks = filterProjects(projectType, dataSet.works)
         }
 
-        (document.querySelector('.gallery') as HTMLElement).innerHTML = ''
+        // (document.querySelector('.gallery') as HTMLElement).innerHTML = ''
         displayWorks(displayedWorks)
 
         console.log('displayed works : ', displayedWorks)
@@ -121,10 +126,12 @@ displayWorks(displayedWorks)
 
 //MODIFIER LES PROJETS
 
-const startEditingHandler = async function (event: Event) {
+const startEditingHandler = async function () {
     () => console.log('start editing')
 
-    event.target?.removeEventListener('click', startEditingHandler)
+    //Enlever l'event listener
+    const editButton = document.getElementById('editButton')
+    editButton?.replaceWith(editButton.cloneNode(true))
 
     //Ouverture de la modale modifier
     const body = document.querySelector('body')
@@ -134,7 +141,8 @@ const startEditingHandler = async function (event: Event) {
     modal?.insertAdjacentHTML('afterbegin', modalHtmlContent)
 
     const modalGallery = document.getElementById('edit-gallery')
-    displayWorks(worksSet, modalGallery, false, true)
+    console.log("is workEdited : ", workEdited)
+    displayWorks(workEdited ? (await getDataSet(['works'])).works : dataSet.works, modalGallery, false, true)
 
     const figcaptions = document.querySelectorAll('#edit-gallery figcaption, #edit-gallery figcaption i')
     for (const figcaption of figcaptions) {
@@ -144,12 +152,22 @@ const startEditingHandler = async function (event: Event) {
     document.getElementById('add-picture-button')?.addEventListener('click', addWorkHandler)
 
     //Navigation de la modale
-    function closeEditHandler(event: Event) {
-        const eventTarget = event.target as HTMLButtonElement
-        eventTarget.removeEventListener('click', closeEditHandler)
+    async function closeEditHandler() {
         document.getElementById('editButton')?.addEventListener('click', startEditingHandler)
 
-        modalContainer?.remove()
+        //Supprimer tous les event listeners de la modale
+        modalContainer?.replaceWith(modalContainer.cloneNode(true))
+        document.getElementById('modalContainer')?.remove()
+
+        if (workEdited) {
+            const freshData = (await getDataSet(["works"])).works
+            dataSet.works = freshData
+
+            const currentFilter = document.querySelector('.filterButton.clickedButton')?.id
+            console.log('current filter : ', currentFilter)
+            currentFilter && freshData && displayWorks(filterProjects(currentFilter, freshData))
+            setWorkEdited(false)
+        }
     }
     const closeEditButton = document.getElementById('edit-close-button')
     closeEditButton?.addEventListener('click', closeEditHandler)
@@ -160,10 +178,21 @@ const startEditingHandler = async function (event: Event) {
         targetButton?.removeEventListener('click', addWorkHandler)
 
         //Change le contenu de la modale
-        const modalContent = document.getElementById('modal-content')
-        modalContent && (modalContent.innerHTML = '')
-        const addWorkModalHtmlContent = await importHTMLasString(modalAddWorkUrl)
-        modalContent?.insertAdjacentHTML('afterbegin', addWorkModalHtmlContent)
+        async function insertModalContent(contentUrl: URL) {
+            const modalContent = document.getElementById('modal-content')
+            modalContent && (modalContent.innerHTML = '')
+            const addWorkModalHtmlContent = await importHTMLasString(contentUrl)
+            modalContent?.insertAdjacentHTML('afterbegin', addWorkModalHtmlContent)
+
+        }
+        await insertModalContent(modalAddWorkUrl)
+        //Ajoute le back button à la navbar de la modale
+        function modalNavBack() {
+            closeEditHandler()
+            startEditingHandler()
+        }
+        document.getElementById('edit-nav')?.insertAdjacentHTML('afterbegin', '<i class="fa-solid fa-arrow-left" id="edit-nav-back" ></>')
+        document.getElementById('edit-nav-back')?.addEventListener('click', modalNavBack)
 
         // Validation du formulaire
         function addWorkFormValidate() {
@@ -209,6 +238,8 @@ const startEditingHandler = async function (event: Event) {
                 }
             })
 
+            response.status === 201 && setWorkEdited(true) && displayMessage('Photo Ajoutée')
+
             const responseLog: Record<number, string> = {
                 201: 'work created',
                 400: 'Bad request',
@@ -218,7 +249,6 @@ const startEditingHandler = async function (event: Event) {
             console.log(Object.keys(responseLog).includes(response.status.toString()) ? responseLog[response.status] : 'unexpected server response')
         }
         const submitWorkButton = document.getElementById('add-picture-button')
-        console.dir('submit work button:', submitWorkButton)
         submitWorkButton?.addEventListener('click', submitWorkHandler)
 
         // Selectionner et Afficher la photo à ajouter
@@ -263,3 +293,9 @@ if (user.loggedIn) {
     editButton?.addEventListener('click', startEditingHandler)
 
 }
+
+/* ## TODO ##
+
+Clean CSS
+
+ */

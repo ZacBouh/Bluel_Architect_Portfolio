@@ -1,8 +1,16 @@
 // GLOBALS
 
 export let user: User = { loggedIn: false }
+export let workEdited = false
+export const setWorkEdited = (isWorkEdited: boolean) => workEdited = isWorkEdited
 
 export function checkUserLogin() {
+
+    function logout(event: Event) {
+        event.target?.removeEventListener('click', logout)
+        sessionStorage.clear()
+        window.location.replace(window.location.origin)
+    }
 
     if (sessionStorage.getItem('token')) {
         user = {
@@ -11,7 +19,9 @@ export function checkUserLogin() {
             token: sessionStorage.getItem('token') ?? undefined
         }
 
-
+        const loginButton = document.getElementById('nav-login-button') as HTMLAnchorElement
+        loginButton && (loginButton.textContent = 'logout') && (loginButton.href = window.location.origin)
+        loginButton?.addEventListener('click', logout)
     }
 }
 
@@ -80,6 +90,9 @@ export const insertDiv = function (targetElement: HTMLElement, position: InsertP
 
 export const displayWorks = function (worksToDisplay: Work[] | undefined, target = document.querySelector('.gallery'), figcaptionContent: boolean = true, figcaptionId: boolean = false) {
     if (worksToDisplay !== undefined) {
+        target && (target.innerHTML = '')
+        console.log('works to display : ', worksToDisplay)
+
         for (const work of worksToDisplay) {
             const workFigure = createWorkFigure(work, figcaptionContent, figcaptionId)
 
@@ -95,6 +108,7 @@ export function displayMessage(message: string) {
 }
 
 export const deleteHandler = (event: Event) => {
+    event.target?.removeEventListener('click', deleteHandler)
     deleteWork(event, user)
 }
 
@@ -122,6 +136,7 @@ export async function deleteWork(event: Event, user: User) {
             console.log('work id : ' + workToDeleteId + ' deleted')
             eventTarget.removeEventListener('click', deleteHandler)
             eventTarget.parentElement?.remove()
+            setWorkEdited(true)
             return false
         case 401:
         case 500:
