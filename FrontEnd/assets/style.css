@@ -245,6 +245,10 @@ a:visited {
 	grid-row-gap: 20px;
 }
 
+.gallery.edit-mode {
+	margin-top: 92px;
+}
+
 .gallery img {
 	width: 100%;
 
@@ -381,6 +385,26 @@ button[type='submit'],
 	display: inline-block;
 	margin-right: 10px;
 	transform: translateY(-2px);
+}
+
+#edit-mode-banner {
+	height: 59px;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: black;
+}
+
+#edit-mode-banner-content {
+	max-width: fit-content;
+	font-size: 16px;
+	color: white;
+}
+
+#edit-mode-banner-content p {
+	margin-left: 12px;
+	display: inline-block;
 }
 
 /* MODAL */

@@ -159,6 +159,7 @@ const startEditingHandler = async function () {
         modalContainer?.replaceWith(modalContainer.cloneNode(true))
         document.getElementById('modalContainer')?.remove()
 
+        //Refresh le contenu de la page en respectant le filtre selectionné
         if (workEdited) {
             const freshData = (await getDataSet(["works"])).works
             dataSet.works = freshData
@@ -279,7 +280,7 @@ const startEditingHandler = async function () {
 }
 
 
-//Afficher le bouton modifier et remplacer login par logout
+//Afficher le bouton modifier et remplacer login par logout + le bandeau et enlever les filtres
 
 if (user.loggedIn) {
 
@@ -292,6 +293,18 @@ if (user.loggedIn) {
 
     editButton?.addEventListener('click', startEditingHandler)
 
+    //Supprimer la barre de filtres et tous les event listeners attachés
+    const filterBar = document.getElementById('filtersContainer')
+    filterBar?.replaceWith(filterBar?.cloneNode())
+    document.getElementById('filtersContainer')?.remove()
+    // Ajuster la marge entre la gallerie et le titre
+    document.querySelector('.gallery')?.classList.add('edit-mode')
+    //Ajouter le bandeau Mode Edition
+    const body = document.querySelector('body') as HTMLElement
+    const editModeBanner = insertDiv(body, 'beforebegin', 'edit-mode-banner')
+    const editModeBannerContent = insertDiv(editModeBanner, 'afterbegin', 'edit-mode-banner-content')
+    editModeBannerContent.insertAdjacentHTML('afterbegin', '<i class="fa-regular fa-pen-to-square"></i>')
+    editModeBannerContent.insertAdjacentHTML('beforeend', '<p>Mode édition</p>')
 }
 
 /* ## TODO ##
